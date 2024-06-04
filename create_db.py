@@ -1,3 +1,3 @@
-from serverProject import app, db
+from flask_app import app, db
 with app.app_context():
     db.create_all()
