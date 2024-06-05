@@ -52,6 +52,7 @@ what_genre = db.Table('what_genre',
 
 class Users(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
+    pass_hash = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     wallet = db.Column(db.Float, nullable=False)
 
