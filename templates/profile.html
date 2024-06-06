@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background: #444;
+        }
+        nav a {
+            color: #fff;
+            padding: 1rem;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background: #555;
+        }
+        .container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        p {
+            font-size: 1.2rem;
+        }
+        .book {
+            margin: 1rem 0;
+        }
+        .book-title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="#">Browse Books</a>
+    </nav>
+    <div class="container">
+        <h2>Profile</h2>
+        <p>Username: {{ current_user.username }}</p>
+        <p>Wallet: ${{ current_user.wallet }}</p>
+        <h3>Purchased Books:</h3>
+        {% for entry in ledger_entries %}
+        <div class="book">
+            <a href="{{ url_for('read_book', book_id=books_dict[entry.book_id].book_id) }}">
+                <span class="book-title">{{ books_dict[entry.book_id].title }}</span>
+            </a> - ${{ books_dict[entry.book_id].price }}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

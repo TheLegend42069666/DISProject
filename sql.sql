@@ -35,20 +35,20 @@ CREATE TABLE what_genre (
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
-    pass_hash VARCHAR(100) NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL,
     wallet FLOAT NOT NULL
 );
 
 CREATE TABLE ledger (
+    loan_id INT NOT NULL,
     book_id INT NOT NULL,
-    genre_id INT NOT NULL,
-    loan_id INT,
-    expiry_date DATE,
+    user_id INT NOT NULL,
     lend_date DATE,
-    PRIMARY KEY (book_id, genre_id),
-    FOREIGN KEY (book_id) REFERENCES book (book_id),
-    FOREIGN KEY (genre_id) REFERENCES genres (genre_id)
+    expiry_date DATE,
+    PRIMARY KEY (book_id, user_id),
+    FOREIGN KEY (book_id) REFERENCES books (book_id)
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
 
 CREATE TABLE admin (

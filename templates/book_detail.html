@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background: #444;
+        }
+        nav a {
+            color: #fff;
+            padding: 1rem;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background: #555;
+        }
+        .user-nav {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 1rem;
+        }
+        .user-nav a {
+            color: #fff;
+            margin-left: 1rem;
+            text-decoration: none;
+        }
+        .user-nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .book-details {
+            display: flex;
+            margin-bottom: 2rem;
+        }
+        .book-details img {
+            max-width: 200px;
+        }
+        .book-info {
+            margin-left: 1rem;
+        }
+        .book-info h2 {
+            margin: 0 0 1rem 0;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            background: #333;
+            color: #fff;
+            margin-top: 2rem;
+        }
+        .flash-messages {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ book.title }}</h1>
+        <div class="user-nav">
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('logout') }}">Log Out</a>
+        </div>
+    </header>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="#">Browse Books</a>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <div class="book-details">
+            <img src="{{ book.cover_image }}" alt="E-Book Cover">
+            <div class="book-info">
+                <h2>{{ book.title }}</h2>
+                <p>Author: {{ book.authors[0].name }}</p>
+                <p>Release Date: {{ book.release_date }}</p>
+                <p>Price: ${{ book.price }}</p>
+                <p>Genres: {% for genre in book.genres %}{{ genre.genre }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+                <form method="POST" action="{{ url_for('buy_book', book_id=book.book_id) }}">
+                    <button type="submit">Buy</button>
+                </form>
+            </div>
+        </div>
+        <div class="book-description">
+            <p>{{ book.description }}</p>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 E-Book World. All rights reserved.</p>
+    </footer>
+</body>
+</html>
