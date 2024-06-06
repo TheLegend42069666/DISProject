@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+import json
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -10,22 +11,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:42069@localhost/e
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
-class Book(db.Model):
+class Books(db.Model):
     book_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
     release_date = db.Column(db.Date, nullable=False)
     cover_image = db.Column(db.String(255), nullable=False)
-    summary = db.Column(db.Text, nullable=False)
     price = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
         return f'<Book: {self.title}>'
 
 class Authors(db.Model):
-    autor_id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
@@ -33,7 +32,7 @@ class Authors(db.Model):
 
 written_by = db.Table('written_by',
     db.Column('book_id', db.Integer, db.ForeignKey('book.book_id'), primary_key=True),
-    db.Column('author_id', db.Integer, db.ForeignKey('authors.autor_id'), primary_key=True)
+    db.Column('author_id', db.Integer, db.ForeignKey('authors.author_id'), primary_key=True)
 )
 
 class Genres(db.Model):
@@ -102,6 +101,65 @@ class EventTypes(db.Model):
 @app.route('/')
 def home():
     return render_template('website.html')
+
+def insert_books_from_json():
+    with open('books.json', 'r') as f:
+            books = json.load(f)
+        
+    for book in books:
+        title, author_name, release_date_str, cover_image, content, price, genres = book
+
+        print(f'Processing book: {title} by {author_name}')
+
+        try:
+            release_date = datetime.strptime(release_date_str, '%b %d, %Y').date()
+
+            author = Authors.query.filter_by(name=author_name).first()
+            if not author:
+                author = Authors(name=author_name)
+                db.session.add(author)
+                db.session.commit()
+                print(f'Added new author: {author_name}')
+
+            new_book = Books(
+                title=title,
+                content=content,
+                release_date=release_date,
+                cover_image=cover_image,
+                price=price
+            )
+            db.session.add(new_book)
+            db.session.commit()
+            print(f'Added new book: {title}')
+
+            new_book_author = written_by.insert().values(book_id=new_book.book_id, author_id=author.author_id)
+            db.session.execute(new_book_author)
+            db.session.commit()
+            print(f'Linked book {title} with author {author_name}')
+
+            for genre_name in genres:
+                genre = Genres.query.filter_by(genre=genre_name).first()
+                if not genre:
+                    genre = Genres(genre=genre_name)
+                    db.session.add(genre)
+                    db.session.commit()
+                    print(f'Added new genre: {genre_name}')
+
+                new_book_genre = what_genre.insert().values(book_id=new_book.book_id, genre_id=genre.genre_id)
+                db.session.execute(new_book_genre)
+                db.session.commit()
+                print(f'Linked book {title} with genre {genre_name}')
+
+        except Exception as e:
+            print(f'Error processing book {title}: {e}')
+            db.session.rollback()
+
+@app.cli.command('insert_books')
+def insert_books_command():
+    """Insert books from books.json into the database."""
+    insert_books_from_json()
+    print("Books inserted successfully.")
+
 
 if __name__ == '__main__':
     app.run(debug=True)

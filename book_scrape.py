@@ -1,29 +1,48 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+import re
 
 base_url = "https://www.gutenberg.org/ebooks/"
 
 def get_book_content(book_id):
     url = f"https://www.gutenberg.org/cache/epub/{book_id}/pg{book_id}.txt"
+    
     response = requests.get(url)
 
     if response.status_code == 404:
-        return f'Audiobook: {base_url}{book_id}'
+        url2 = f'https://gutenberg.org/files/{book_id}/{book_id}.txt'
+        response = requests.get(url2)
+        if response.status_code == 404:
+            url4 = f'{base_url}{book_id}'
+            response = requests.get(url4)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            if soup.find('td', {'property': 'dcterms:type'}).get_text() == 'Sound':
+                return f'Audiobook: {base_url}{book_id}'
+            else:
+                return 'No Content'
     
     content = response.text
 
-    start_text = '*** START OF THE PROJECT GUTENBERG EBOOK'
-    end_text = '*** END OF THE PROJECT GUTENBERG EBOOK'
+    patterns = [
+        (r"\*\*\* START OF THE PROJECT GUTENBERG EBOOK.*\*\*\*\s*", '*** END OF THE PROJECT GUTENBERG EBOOK'),
+        (r"\*\*\* START OF THIS PROJECT GUTENBERG EBOOK.*\*\*\*\s*", '*** END OF THIS PROJECT GUTENBERG EBOOK')
+    ]
 
-    start_index = content.find(start_text)
-    end_index = content.find(end_text)
+    # Check for each pattern
+    for start_text, end_text in patterns:
+        start_match = re.search(start_text, content)
+        if start_match:
+            content = content[start_match.end():]
+            end_index = content.find(end_text)
+            if end_index != -1:
+                content = content[:end_index]
+            break
 
-    if start_index != -1 and end_index != -1:
-        return content[start_index:end_index + 7]
+    return content
 
 
-def calculate_price(book_id, content):
+def calculate_price(content):
     number_of_words = 0
     for word in content:
         number_of_words += 1
@@ -63,18 +82,22 @@ def get_book_details(book_id):
     title_text = soup.find('h1', {'itemprop': 'name'}).get_text(separator="by")
     
     title = title_text.split("by")[0].strip()
-    author = title_text.split("by")[1].strip()
+    try:
+        author = title_text.split("by")[1].strip()
+    except IndexError:
+        author = "Anonymous"
 
     release_date = soup.find('td', {'itemprop': 'datePublished'}).get_text()
 
-    cover_image_url = soup.find('img', {'class': 'cover-art'})['src']
+    try:
+        cover_image_url = soup.find('img', {'class': 'cover-art'})['src']
+    except TypeError:
+        cover_image_url = "No Image Found"
+    
+    genres = [td.get_text().strip() for td in soup.find_all('td', {'property': 'dcterms:subject'})]
 
     content = get_book_content(book_id)
 
-    price = calculate_price(book_id, content)[0]
+    price = calculate_price(content)[0]
 
-    return price
-
-book_id = 8989
-# print(get_book_details(book_id))
-print(get_book_details(63415))
+    return title, author, release_date, cover_image_url, content, price, genres
