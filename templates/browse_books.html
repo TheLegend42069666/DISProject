@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Book Website</title>
+    <title>Browse Books</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -90,11 +90,31 @@
         .pagination a:hover {
             text-decoration: underline;
         }
+        .search-bar {
+            margin: 1rem 0;
+            text-align: center;
+        }
+        .search-bar input[type="text"] {
+            width: 300px;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        .search-bar button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .search-bar button:hover {
+            background-color: #555;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Welcome to E-Book World</h1>
+        <h1>Browse Books</h1>
         <div class="user-nav">
             <a href="{{ url_for('profile') }}">Profile</a>
             <a href="{{ url_for('logout') }}">Log Out</a>
@@ -104,6 +124,12 @@
         <a href="{{ url_for('home') }}">Home</a>
         <a href="{{ url_for('browse_books') }}">Browse Books</a>
     </nav>
+    <div class="search-bar">
+        <form method="POST" action="{{ url_for('browse_books') }}">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search for books, genres or authors...">
+            <button type="submit">Search</button>
+        </form>
+    </div>
     <div class="container">
         {% for book in books %}
         <div class="book">
@@ -128,7 +154,7 @@
         {% endif %}
     </div>
     <div style="text-align: center; margin-top: 1rem;">
-        <p>Page {{ books_pagination.page }} of {{ books_pagination.pages }}</p>
+        <p>Page {{ current_page }} of {{ ((total_books - 1) // per_page_other_pages) + 1 }}</p>
     </div>
     <footer>
         <p>&copy; 2024 E-Book World. All rights reserved.</p>

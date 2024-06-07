@@ -60,7 +60,11 @@ class Books(db.Model):
                               primaryjoin="Books.book_id == written_by.c.book_id",
                               secondaryjoin="Authors.author_id == written_by.c.author_id",
                               backref=db.backref('books', lazy=True))
-    genres = db.relationship('Genres', secondary=what_genre, backref=db.backref('books', lazy=True))
+    genres = db.relationship(
+        'Genres', 
+        secondary=what_genre, 
+        backref=db.backref('books', lazy=True)
+    )
 
     def __repr__(self):
         return f'<Book: {self.title}>'
@@ -159,16 +163,36 @@ def home():
     books = books_pagination.items
     for book in books:
         book.description = book.get_description()
-    next_url = url_for('home', page=books_pagination.next_num) if books_pagination.has_next else None
-    prev_url = url_for('home', page=books_pagination.prev_num) if books_pagination.has_prev else None
-    return render_template('home.html', books=books, books_pagination=books_pagination, next_url=next_url, prev_url=prev_url)
+    next_url = url_for(
+        'home', page=books_pagination.next_num) if books_pagination.has_next else None
+    prev_url = url_for(
+        'home', page=books_pagination.prev_num) if books_pagination.has_prev else None
+    
+    if hasattr(current_user, 'Admin'):
+        template = 'admin_home.html'
+    else:
+        template = 'home.html'
+
+    return render_template(
+        template, 
+        books=books, 
+        books_pagination=books_pagination, 
+        next_url=next_url, 
+        prev_url=prev_url
+    )
 
 
 @app.route('/book/<int:book_id>')
 def book_detail(book_id):
     book = Books.query.get_or_404(book_id)
     book.description = book.get_description()
-    return render_template('book_detail.html', book=book)
+    
+    if hasattr(current_user, 'Admin'):
+        template = 'admin_book_detail.html'
+    else:
+        template = 'book_detail.html'
+    
+    return render_template(template, book=book)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -191,7 +215,11 @@ def signup():
         if user:
             flash('Username already exists')
         else:
-            new_user = Users(username=form.username.data, password=form.password.data, wallet=1000.0)
+            new_user = Users(
+                username=form.username.data, 
+                password=form.password.data, 
+                wallet=1000.0
+            )
             db.session.add(new_user)
             db.session.commit()
             flash('User created successfully, please log in')
@@ -212,14 +240,27 @@ def profile():
     ledger_entries = db.session.query(ledger).filter_by(user_id=current_user.user_id).all()
     books = Books.query.filter(Books.book_id.in_([entry.book_id for entry in ledger_entries])).all()
     books_dict = {book.book_id: book for book in books}
-    return render_template('profile.html', ledger_entries=ledger_entries, books_dict=books_dict)
+    
+    if hasattr(current_user, 'Admin'):
+        template = 'admin_profile.html'
+    else:
+        template = 'profile.html'
+    
+    return render_template(
+        template, 
+        ledger_entries=ledger_entries, 
+        books_dict=books_dict
+    )
 
 
 @app.route('/buy/<int:book_id>', methods=['POST'])
 @login_required
 def buy_book(book_id):
     book = Books.query.get_or_404(book_id)
-    existing_entry = db.session.query(ledger).filter_by(book_id=book_id, user_id=current_user.user_id).first()
+    existing_entry = db.session.query(ledger).filter_by(
+        book_id=book_id, 
+        user_id=current_user.user_id
+    ).first()
 
     if existing_entry:
         flash('Book already bought')
@@ -254,7 +295,76 @@ def read_book(book_id):
         flash("You haven't purchased this book.")
         return redirect(url_for('profile'))
     
-    return render_template('read_book.html', book=book)
+    if hasattr(current_user, 'Admin'):
+        template = 'admin_read_book.html'
+    else:
+        template = 'read_book.html'
+    
+    return render_template(template, book=book)
+
+
+@app.route('/browse_books', methods=['GET', 'POST'])
+@login_required
+def browse_books(): 
+    if request.method == 'POST':
+        search_query = request.form.get('search')
+    else:
+        search_query = request.args.get('search', '')
+    
+    page = request.args.get('page', 1, type=int)
+    # sqlalchemys pagination was not working properly so made it manuelly
+    per_page_first_page = 10
+    per_page_other_pages = 10
+
+    query = Books.query
+    if search_query:
+        query = query.join(Books.genres).join(Books.authors).filter(
+            db.or_(
+                Books.title.ilike(f'%{search_query}%'),
+                Genres.genre.ilike(f'%{search_query}%'),
+                Authors.name.ilike(f'%{search_query}%')
+            )
+        )
+    
+    all_books = query.all()
+    total_books = len(all_books)
+
+    if page == 1:
+        start_index = 0
+        end_index = per_page_first_page
+    else:
+        start_index = per_page_first_page + (page - 2) * per_page_other_pages
+        end_index = start_index + per_page_other_pages
+
+    books = all_books[start_index:end_index]
+
+    for book in books:
+        book.description = book.get_description()
+
+    if end_index < total_books:
+        next_url = url_for('browse_books', page=page + 1, search=search_query)
+    else:
+        next_url = None
+    
+    if page > 1:
+        prev_url = url_for('browse_books', page=page - 1, search=search_query)
+    else:
+        next_url = None
+
+    if hasattr(current_user, 'Admin'):
+        template = 'admin_browse_books.html'
+    else:
+        template = 'browse_books.html'
+
+    return render_template(
+        template, 
+        books=books, 
+        total_books=total_books,
+        current_page=page, 
+        next_url=next_url, prev_url=prev_url, 
+        search_query=search_query,
+        per_page_other_pages=per_page_other_pages
+    )
 
 
 
@@ -322,4 +432,5 @@ def insert_books_command():
 
 
 if __name__ == '__main__':
+    # app.run(debug=True)
     app.run(debug=True)
