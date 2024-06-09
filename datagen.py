@@ -204,10 +204,3 @@ def generate_loans(session, book):
         end_date = start_date + timedelta(days=31)
         database.new_loan(session, book, user, start_date, end_date)
     database.update_ledger(session)
-
-
-
-
-if __name__ == '__main__':
-    print('Use "flask run" and in a seperate terminal "flask scrape-db" to run the webscraper.')
-    print('Then use "flask reset-db" to load the scraped data into the database')
