@@ -1,4 +1,5 @@
 from app import db
+from flask_login import UserMixin
 
 
 class Author(db.Model):
@@ -16,13 +17,16 @@ class Language(db.Model):
     LangID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     LangName = db.Column(db.String(64))
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     UserID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     UserName = db.Column(db.String(50), unique=True, nullable=False)
     UserEmail = db.Column(db.String(255), unique=True, nullable=False)
     PassHash = db.Column(db.String(255), nullable=False)
     WalletCents = db.Column(db.Integer, default=0, nullable=False)
+
+    def get_id(self):
+        return self.UserID
 
 class Book(db.Model):
     __tablename__ = 'books'

@@ -38,28 +38,56 @@
             font-size: 1.2rem;
         }
         .book {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin: 1rem 0;
+        }
+        .book-info {
+            flex-grow: 1;
         }
         .book-title {
             font-weight: bold;
+        }
+        .book-price {
+            margin-left: 1rem;
+            white-space: nowrap;
+        }
+        .flash-messages {
+            color: red;
         }
     </style>
 </head>
 <body>
     <nav>
         <a href="{{ url_for('home') }}">Home</a>
-        <a href="#">Browse Books</a>
+        <a href="{{ url_for('browse_books') }}">Browse Books</a>
     </nav>
     <div class="container">
         <h2>Profile</h2>
         <p>Username: {{ current_user.username }}</p>
         <p>Wallet: ${{ current_user.wallet }}</p>
         <h3>Purchased Books:</h3>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
         {% for entry in ledger_entries %}
         <div class="book">
-            <a href="{{ url_for('read_book', book_id=books_dict[entry.book_id].book_id) }}">
-                <span class="book-title">{{ books_dict[entry.book_id].title }}</span>
-            </a> - ${{ books_dict[entry.book_id].price }}
+            <div class="book-info">
+                <a href="{{ url_for('read_book', book_id=books_dict[entry.book_id].book_id) }}">
+                    <span class="book-title">{{ books_dict[entry.book_id].title }}</span>
+                </a>
+                <span class="book-price"> - ${{ books_dict[entry.book_id].price }}</span>
+            </div>
+            <form method="POST" action="{{ url_for('remove_book', book_id=books_dict[entry.book_id].book_id) }}">
+                <button type="submit">Remove</button>
+            </form>
         </div>
         {% endfor %}
     </div>

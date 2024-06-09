@@ -133,7 +133,7 @@
     <div class="container">
         {% for book in books %}
         <div class="book">
-            <img src="{{ book.cover_image }}" alt="E-Book Cover">
+            <img src="{{ cover_image }}" alt="E-Book Cover">
             <div class="book-details">
                 <h2>{{ book.title }}</h2>
                 <p>Author: {{ book.authors[0].name }}</p>
@@ -157,7 +157,7 @@
         <p>Page {{ current_page }} of {{ ((total_books - 1) // per_page_other_pages) + 1 }}</p>
     </div>
     <footer>
-        <p>&copy; 2024 E-Book World. All rights reserved.</p>
+        <p>&copy; 2024 Group 32. All rights reserved.</p>
     </footer>
 </body>
 </html>
