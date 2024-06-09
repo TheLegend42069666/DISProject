@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from multiprocessing import Pool, Lock
 
-csv.field_size_limit(10**8)
+csv.field_size_limit(min(sys.maxsize, 2147483646))
 __lock = Lock()
 
 ROOT = "https://www.gutenberg.org/"
@@ -33,7 +33,7 @@ ADJ_LIST = ['horrible', 'bad', 'mediocre', 'good', 'fantastic', 'phenomenal']
 INT_LIST = [str(i) for i in range(10)]
 
 
-def req(url, trials = 5):
+def req(url, trials = 3):
     print(f"Requesting: {repr(url)}")
     backoff = 0.1
     while trials > 0:
@@ -129,10 +129,9 @@ def worker(link, filepath):
         cover = None
         if cover_url is not None:
             cover = base64.b64encode(req(cover_url).content).decode()
-        content = str(req(content_url).content)
+        content = str(req(content_url).content, 'utf-8')
         content = re.search(CONTENT_EXTRACT, str(content)).group(1).strip()
-        content = content.encode().decode('unicode_escape').strip().encode()
-
+        content = content.encode('unicode_escape').decode()
         with __lock:
             with open(filepath, "a") as file:
                 writer = csv.writer(file)
@@ -165,7 +164,7 @@ def dump_to_db(filepath, session):
                     1000, 
                     dateparser.parse(row['date']), 
                     base64.b64decode(row['cover'].encode()), 
-                    row['content'].encode(), 
+                    row['content'].encode().decode('unicode_escape'), 
                     row['themes'].split(',')
                 )
                 generate_reviews(session, book, row['date'])

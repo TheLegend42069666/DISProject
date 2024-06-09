@@ -10,7 +10,7 @@ from flask.cli import with_appcontext
 import click
 from datetime import datetime, timedelta
 import base64
-import codecs
+
 
 config = ConfigParser()
 config.read(path.join(path.dirname(__file__), 'config.ini'))
@@ -208,7 +208,6 @@ def buy_book(book_id):
         flash('Insufficient funds')
     return redirect(url_for('book_detail', book_id=book_id))
 
-import binascii
 
 @app.route('/read/<int:book_id>')
 @login_required
@@ -221,20 +220,12 @@ def read_book(book_id):
     
     book_content = BookContent.query.filter_by(book_id=book_id).first()
     if book_content and book_content.text_content:
-        try:
-            hex_content = book_content.text_content.replace("\\x", "")
-            byte_content = bytes.fromhex(hex_content)
-            decoded_content = byte_content.decode('latin-1')
-            unicode_decoded_content = decoded_content.encode().decode('unicode_escape')
-            book_text_content = unicode_decoded_content.encode('latin-1').decode('utf-8')
-
-        except Exception as e:
-            book_text_content = f"Error decoding content: {str(e)}"
+        content = book_content.text_content
     else:
-        book_text_content = "Content not available"
+        content = "Content not available"
             
 
-    return render_template('read_book.html', book=book, book_text_content=book_text_content)
+    return render_template('read_book.html', book=book, book_text_content=content)
 
 
 @app.route('/browse_books', methods=['GET', 'POST'])
@@ -344,7 +335,7 @@ def reset_db():
 @with_appcontext
 def scrape_db(n):
     print("Scraping books from https://www.gutenberg.org/ and saving to dump")
-    print('User "reset-db" after, to load the dump into the database.')
+    print('Use "reset-db" after, to load the dump into the database.')
     import datagen
     links = datagen.scrape_links(n)
     datagen.scrape_to_dump(links, 'dump.csv')
