@@ -16,6 +16,7 @@
             color: #fff;
             padding: 1rem 0;
             text-align: center;
+            position: relative;
         }
         nav {
             display: flex;
@@ -64,6 +65,15 @@
         .book-info h2 {
             margin: 0 0 1rem 0;
         }
+        .reviews {
+            margin-top: 2rem;
+        }
+        .review {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
         footer {
             text-align: center;
             padding: 1rem 0;
@@ -102,17 +112,30 @@
             <img src="{{ book.cover_image }}" alt="E-Book Cover">
             <div class="book-info">
                 <h2>{{ book.title }}</h2>
-                <p>Author: {{ book.authors[0].name }}</p>
+                <p>Author: {{ book.author.author_name }}</p>
                 <p>Release Date: {{ book.release_date }}</p>
-                <p>Price: ${{ book.price }}</p>
-                <p>Genres: {% for genre in book.genres %}{{ genre.genre }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+                <p>Language: {{ book.lang.lang_name }}</p>
+                <p>Price: ${{ book.price_cents / 100 }}</p>
+                <p>Themes: {% for theme in book.bookthemes %}{{ theme.theme.theme_name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+                <p>Average Rating: {{ book.rating.avg_rating }}</p>
                 <form method="POST" action="{{ url_for('buy_book', book_id=book.book_id) }}">
                     <button type="submit">Buy</button>
                 </form>
             </div>
         </div>
         <div class="book-description">
-            <p>{{ book.description }}</p>
+            <p>{{ book.summary }}</p>
+        </div>
+        <div class="reviews">
+            <h3>Reviews</h3>
+            {% for review in book.reviews %}
+            <div class="review">
+                <p><strong>User:</strong> {{ review.user.user_name }}</p>
+                <p><strong>Rating:</strong> {{ review.rating }}</p>
+                <p><strong>Comment:</strong> {{ review.comment }}</p>
+                <p><small><strong>Review Time:</strong> {{ review.review_time }}</small></p>
+            </div>
+            {% endfor %}
         </div>
     </div>
     <footer>

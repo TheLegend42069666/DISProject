@@ -26,7 +26,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-from schema import * 
+from schema import *
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(max=100)])

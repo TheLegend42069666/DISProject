@@ -65,8 +65,8 @@
     </nav>
     <div class="container">
         <h2>Profile</h2>
-        <p>Username: {{ current_user.username }}</p>
-        <p>Wallet: ${{ current_user.wallet }}</p>
+        <p>Username: {{ current_user.user_name }}</p>
+        <p>Wallet: ${{ current_user.wallet_cents / 100 }}</p>
         <h3>Purchased Books:</h3>
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
@@ -83,7 +83,7 @@
                 <a href="{{ url_for('read_book', book_id=books_dict[entry.book_id].book_id) }}">
                     <span class="book-title">{{ books_dict[entry.book_id].title }}</span>
                 </a>
-                <span class="book-price"> - ${{ books_dict[entry.book_id].price }}</span>
+                <span class="book-price"> - ${{ books_dict[entry.book_id].price_cents / 100 }}</span>
             </div>
             <form method="POST" action="{{ url_for('remove_book', book_id=books_dict[entry.book_id].book_id) }}">
                 <button type="submit">Remove</button>
