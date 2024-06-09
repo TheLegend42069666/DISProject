@@ -4,11 +4,14 @@ import requests
 import re
 import base64
 import csv
+import random
+import hashlib
+import database
+from datetime import datetime, timedelta
 from dateutil import parser as dateparser
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from multiprocessing import Pool, Lock
-import schema
 
 csv.field_size_limit(sys.maxsize)
 __lock = Lock()
@@ -23,6 +26,11 @@ THEME_SPLIT = re.compile(r' ?, ?| ?-- ?')
 THEME_EXTRACT = re.compile(r'\((.*)\)')
 DOWNLOADS_EXTRACT = re.compile(r'\b(\d+)\b')
 CONTENT_EXTRACT = re.compile(r'\*\*\* START OF (?:THE|THIS) PROJECT GUTENBERG.*\*\*\*(.*)\*\*\* END OF (?:THE|THIS) PROJECT GUTENBERG.*\*\*\*', re.DOTALL)
+
+DOMAIN_LIST = ['yahoo.com', 'gmail.com', 'hotmail.com', 'aol.com']
+WORD_LIST = ['Lemon', 'John', 'Gamer', 'Mega', 'Karl', 'Circle', 'Exquisite', 'Cool', 'New', 'james', 'Bad', 'Quincy', 'Ying', 'Alex', 'Christian', 'Kevin', 'Micheal']
+ADJ_LIST = ['horrible', 'bad', 'mediocre', 'good', 'fantastic', 'phenomenal']
+INT_LIST = [str(i) for i in range(10)]
 
 
 def req(url, trials = 5):
@@ -129,14 +137,9 @@ def worker(link, filepath):
             with open(filepath, "a") as file:
                 writer = csv.writer(file)
                 writer.writerow([
-                    downloads,
-                    title,
-                    author,
-                    lang,
-                    date,
+                    downloads, title, author, lang, date,
                     ",".join([theme for theme in themes]),
-                    content,
-                    cover
+                    content, cover
                 ])
     except Exception as e:
         print(e)
@@ -153,7 +156,7 @@ def dump_to_db(filepath, session):
         reader = csv.DictReader(file)
         for row in reader:
             try:
-                book = schema.new_book(
+                book = database.new_book(
                     session, 
                     row['title'], 
                     None, 
@@ -165,15 +168,44 @@ def dump_to_db(filepath, session):
                     row['content'].encode(), 
                     row['themes'].split(',')
                 )
-                generate_random_reviews(int(row['downloads']), book)
+                generate_reviews(session, book, row['date'])
+                generate_loans(session, book)
+                database.update_rating(session, book)
                 session.commit()
             except Exception as e:
                 session.rollback()
                 print(e)
 
+def generate_reviews(session, book, date):
+    bias = min(random.randint(1, 6), 5)
+    users = database.get_random_users(session, random.randint(2, 36))
+    start_date = dateparser.parse(date)
+    end_date = datetime.today()
+    for user in users:
+        date = start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
+        rating = min(max(random.randint(-1, 1) + bias, 0), 5)
+        comment = f'This is a {ADJ_LIST[rating]} book!'
+        database.new_review(session, book, user, rating, comment, date)
 
-def generate_random_reviews(downloads, book):
-    pass
+def generate_users(session, n):
+    for _ in range(n):
+        username = ''.join(random.sample(WORD_LIST, 2)) + ''.join(random.sample(INT_LIST, 4))
+        passhash = hashlib.sha256(username.encode()).hexdigest()
+        email = username + '@' + random.choice(DOMAIN_LIST)
+        wallet = random.randint(5, 88) * 100
+        database.new_user(session, username, passhash, email, wallet)
+    session.commit()
+
+def generate_loans(session, book):
+    users = database.get_random_users(session, random.randint(2, 36))
+    today = datetime.today()
+    for user in users:
+        start_date = today - timedelta(days=random.randint(15, 30))
+        end_date = start_date + timedelta(days=31)
+        database.new_loan(session, book, user, start_date, end_date)
+    database.update_ledger(session)
+
+
 
 
 if __name__ == '__main__':

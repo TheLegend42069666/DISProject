@@ -22,16 +22,19 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 from schema import * 
+from database import *
 
 @app.cli.command("reset-db")
 @with_appcontext
 def reset_db():
+    import datagen
     print('Dropping all tables.')
     db.drop_all()
     print('Creating new tables.')
     db.create_all()
-    print('Loading database from dump')
-    import datagen
+    print('Generating 100 random users')
+    datagen.generate_users(db.session, 100)
+    print('Loading books from dump and generating reviews and loans for each')
     datagen.dump_to_db('dump.csv', db.session)
 
 @app.cli.command("scrape-db")
