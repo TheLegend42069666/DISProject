@@ -26,12 +26,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(UserID):
-    return User.query.get(int(UserID))
-
-from schema import *
+from schema import * 
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(max=100)])
@@ -228,15 +223,18 @@ def remove_book(book_id):
     return redirect(url_for('user.profile'))
 
 
+
 @app.cli.command("reset-db")
 @with_appcontext
 def reset_db():
+    import datagen
     print('Dropping all tables.')
     db.drop_all()
     print('Creating new tables.')
     db.create_all()
-    print('Loading database from dump')
-    import datagen
+    print('Generating 100 random users')
+    datagen.generate_users(db.session, 100)
+    print('Loading books from dump and generating reviews and loans for each')
     datagen.dump_to_db('dump.csv', db.session)
 
 @app.cli.command("scrape-db")
