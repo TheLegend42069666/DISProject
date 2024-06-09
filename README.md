@@ -6,7 +6,7 @@
 4. In a seperate terminal window use ``flask reset-db`` to create tables and load dummy data. Should take about 30 seconds to run.  
 5. Open app in a browser with ``localhost:5000`` or the address shown in the terminal.  
   
-Note: You can also use ``flask scrape-db n`` to scrape ``n`` books from [gutenberg.com](https://www.gutenberg.org/), but we have already done this with about 100 books, which are found in ``dump.csv`` (125 MB). To load use ``flask reset-db``.  
+Note: You can also use ``flask scrape-db n`` to scrape ``n`` books from [gutenberg.com](https://www.gutenberg.org/), but we have already done this with about 50 books, which are found in ``dump.csv`` (~50 MB). To load use ``flask reset-db``.  
 
 
 ## Information about the project
