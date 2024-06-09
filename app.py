@@ -315,14 +315,14 @@ def profile():
 @app.route('/remove_book/<int:book_id>', methods=['POST'])
 @login_required
 def remove_book(book_id):
-    entry = db.session.query(Ledger).filter_by(BookID=book_id, UserID=current_user.UserID).first()
+    entry = db.session.query(Ledger).filter_by(book_id=book_id, user_id=current_user.user_id).first()
     
     if entry:
         db.session.delete(entry)
         db.session.commit()
         flash(f'Book has been removed from your profile')
     
-    return redirect(url_for('user.profile'))
+    return redirect(url_for('profile'))
 
 
 
