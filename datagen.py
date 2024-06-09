@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from multiprocessing import Pool, Lock
 
-csv.field_size_limit(sys.maxsize)
+csv.field_size_limit(10**8)
 __lock = Lock()
 
 ROOT = "https://www.gutenberg.org/"

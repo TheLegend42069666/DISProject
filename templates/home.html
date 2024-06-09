@@ -107,13 +107,14 @@
     <div class="container">
         {% for book in books %}
         <div class="book">
-            <img src="{{ book.cover_image }}" alt="E-Book Cover">
+            <img src="data:image/png;base64,{{ book.cover_image }}" alt="E-Book Cover">
             <div class="book-details">
                 <h2>{{ book.title }}</h2>
                 <p>Author: {{ book.author.author_name }}</p>
+                <p>Language: {{ book.lang.lang_name }}</p>
                 <p>Release Date: {{ book.release_date }}</p>
                 <p>Themes: {% for theme in book.bookthemes %}{{ theme.theme.theme_name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
-                <p>Description: {{ book.summary }}</p>
+                <p>Average Rating: {{ book.avg_rating }}</p>
                 <button onclick="window.location.href=`{{ url_for('book_detail', book_id=book.book_id) }}`">Read More</button>
             </div>
         </div>

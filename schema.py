@@ -26,7 +26,7 @@ class User(UserMixin, db.Model):
     wallet_cents = db.Column(db.Integer, default=0, nullable=False)
 
     def get_id(self):
-        return self.UserID
+        return self.user_id
 
 class Book(db.Model):
     __tablename__ = 'books'

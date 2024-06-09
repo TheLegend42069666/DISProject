@@ -133,13 +133,14 @@
     <div class="container">
         {% for book in books %}
         <div class="book">
-            <img src="{{ cover_image }}" alt="E-Book Cover">
+            <img src="data:image/png;base64,{{ book.cover_image }}" alt="E-Book Cover">
             <div class="book-details">
                 <h2>{{ book.title }}</h2>
-                <p>Author: {{ book.authors[0].name }}</p>
+                <p>Author: {{ book.author.author_name }}</p>
+                <p>Language: {{ book.lang.lang_name }}</p>
                 <p>Release Date: {{ book.release_date }}</p>
-                <p>Genres: {% for genre in book.genres %}{{ genre.genre }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
-                <p>Description: {{ book.description }}</p>
+                <p>Themes: {% for theme in book.bookthemes %}{{ theme.theme.theme_name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+                <p>Average Rating: {{ book.avg_rating }}</p>
                 <button onclick="window.location.href=`{{ url_for('book_detail', book_id=book.book_id) }}`">Read More</button>
             </div>
         </div>
@@ -158,6 +159,4 @@
     </div>
     <footer>
         <p>&copy; 2024 Group 32. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+    </footer

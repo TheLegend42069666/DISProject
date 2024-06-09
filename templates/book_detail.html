@@ -84,6 +84,41 @@
         .flash-messages {
             color: red;
         }
+        .review-form {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .review-form form {
+            display: flex;
+            flex-direction: column;
+        }
+        .review-form label {
+            margin-top: 1rem;
+        }
+        .review-form input[type="number"] {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+            width: 60px;
+        }
+        .review-form textarea {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        .review-form button {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .review-form button:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +144,7 @@
             {% endif %}
         {% endwith %}
         <div class="book-details">
-            <img src="{{ book.cover_image }}" alt="E-Book Cover">
+            <img src="data:image/png;base64,{{ book.cover_image }}" alt="E-Book Cover">
             <div class="book-info">
                 <h2>{{ book.title }}</h2>
                 <p>Author: {{ book.author.author_name }}</p>
@@ -117,14 +152,21 @@
                 <p>Language: {{ book.lang.lang_name }}</p>
                 <p>Price: ${{ book.price_cents / 100 }}</p>
                 <p>Themes: {% for theme in book.bookthemes %}{{ theme.theme.theme_name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
-                <p>Average Rating: {{ book.rating.avg_rating }}</p>
+                <p>Average Rating: {{ book.avg_rating }}</p>
                 <form method="POST" action="{{ url_for('buy_book', book_id=book.book_id) }}">
                     <button type="submit">Buy</button>
                 </form>
             </div>
         </div>
-        <div class="book-description">
-            <p>{{ book.summary }}</p>
+        <div class="review-form">
+            <h3>Write a Review</h3>
+            <form method="POST" action="{{ url_for('add_review', book_id=book.book_id) }}">
+                <label for="rating">Rating (1-5):</label>
+                <input type="number" id="rating" name="rating" min="1" max="5" required>
+                <label for="comment">Comment:</label>
+                <textarea id="comment" name="comment" rows="4" required></textarea>
+                <button type="submit">Submit Review</button>
+            </form>
         </div>
         <div class="reviews">
             <h3>Reviews</h3>
