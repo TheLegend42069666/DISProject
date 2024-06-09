@@ -208,6 +208,7 @@ def buy_book(book_id):
         flash('Insufficient funds')
     return redirect(url_for('book_detail', book_id=book_id))
 
+import binascii
 
 @app.route('/read/<int:book_id>')
 @login_required
@@ -220,13 +221,15 @@ def read_book(book_id):
     
     book_content = BookContent.query.filter_by(book_id=book_id).first()
     if book_content and book_content.text_content:
-        content = book_content.text_content
-        content = content.replace('\\x', '')
         try:
-            hex_content = bytes.fromhex(content)
-            book_text_content = hex_content.decode('utf-8')
-        except ValueError as e:
-            book_text_content = f"Decoding error: {e}"
+            hex_content = book_content.text_content.replace("\\x", "")
+            byte_content = bytes.fromhex(hex_content)
+            decoded_content = byte_content.decode('latin-1')
+            unicode_decoded_content = decoded_content.encode().decode('unicode_escape')
+            book_text_content = unicode_decoded_content.encode('latin-1').decode('utf-8')
+
+        except Exception as e:
+            book_text_content = f"Error decoding content: {str(e)}"
     else:
         book_text_content = "Content not available"
             
